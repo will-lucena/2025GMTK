@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5417390324697249229}
   - component: {fileID: 4163915658254971287}
-  - component: {fileID: -9194407228590599242}
+  - component: {fileID: 1228109083889206242}
   m_Layer: 0
   m_Name: Tile
   m_TagString: Untagged
@@ -51,7 +51,7 @@ MonoBehaviour:
   y: 0
   unit: {fileID: 0}
   highlightRenderer: {fileID: 4373819276341119055}
---- !u!65 &-9194407228590599242
+--- !u!65 &1228109083889206242
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -144,9 +144,9 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0, g: 0.83137256, b: 0, a: 0.7294118}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -229,7 +229,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 273cb2a91c54e424c902f89e50543e86, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

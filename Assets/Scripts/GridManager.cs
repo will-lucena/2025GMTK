@@ -6,23 +6,32 @@ using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
+    public static GridManager Instance { get; private set; }
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        else
+        {
+            Instance = this;
+        }
+    }
+
     public int width = 8;
     public int height = 8;
     public GameObject tilePrefab;
     public Transform tilesParent;
     public PlayerUnit player;
-    public EnemyUnit enemy;
+    public List<EnemyUnit> enemies;
+    public Color insideRangeHighglightColor;
+    public Color outOFRangeHighglightColor;
 
     private Tile[,] tiles;
 
-    void Start()
-    {
-        GenerateGrid();
-        SpawnPlayer();
-        SpawnEnemy();
-    }
-
-    void GenerateGrid()
+    public void GenerateGrid()
     {
         tiles = new Tile[width, height];
 
@@ -37,7 +46,7 @@ public class GridManager : MonoBehaviour
                 tile.SetHighlight(false);
                 if (tileComponent != null)
                 {
-                    tileComponent.Init(x, y);
+                    tileComponent.Init(x, y, insideRangeHighglightColor, outOFRangeHighglightColor);
                 }
 
                 tiles[x, y] = tile;
@@ -55,23 +64,4 @@ public class GridManager : MonoBehaviour
     {
         return GetTileAtPosition(position.x, position.y);
     }
-
-    void SpawnPlayer()
-    {
-        player.Init(this, width / 2, 0); // Initialize at the starting position (0, 0)
-    }
-
-    void SpawnEnemy()
-    {
-        enemy.Init(this, width / 2, height / 2); // Initialize at the opposite corner (width-1, height-1) 
-    }
-
-    public void HighlightAllTiles(bool active)
-    {
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
-                tiles[x, y].SetHighlight(true, Color.yellow); // For available tiles
-
-    }
-
 }

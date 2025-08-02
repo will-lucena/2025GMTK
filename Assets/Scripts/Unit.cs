@@ -8,11 +8,8 @@ public abstract class Unit : MonoBehaviour
     public int y;
     public int moveRange = 1;
 
-    protected GridManager gridManager;
-
-    public virtual void Init(GridManager gm, int startX, int startY)
+    public virtual void Init(int startX, int startY)
     {
-        gridManager = gm;
         x = startX;
         y = startY;
         move(x, y);
@@ -25,14 +22,15 @@ public abstract class Unit : MonoBehaviour
         move(x, y);
     }
 
-    public virtual void TakeDamage(int damage)
+    public virtual void TakeDamage(int damage = 1)
     {
-
+        Destroy(gameObject);
+        SceneManager.Instance.loadLevel(2);
     }
 
     private void move(int x, int y)
     {
-        Tile tile = gridManager.GetTileAtPosition(x, y);
+        Tile tile = GridManager.Instance.GetTileAtPosition(x, y);
         tile.unit = this;
         Vector3 tilePosition = tile.transform.position;
         transform.position = tilePosition;

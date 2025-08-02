@@ -11,34 +11,42 @@ public class Tile : MonoBehaviour
     public Unit unit;
 
     public SpriteRenderer highlightRenderer;
+    private Color insideRangeHighglightColor;
+    private Color outOFRangeHighglightColor;
 
     public static System.Action<Tile> OnTileClicked;
     public static System.Action<Tile> OnTileHovered;
+    public static System.Action<Tile> OnTileUnHovered;
 
-    public void Init(int xPos, int yPos)
+    public void Init(int xPos, int yPos, Color insideRangeHighglightColor, Color outOFRangeHighglightColor)
     {
         x = xPos;
         y = yPos;
+        this.insideRangeHighglightColor = insideRangeHighglightColor;
+        this.outOFRangeHighglightColor = outOFRangeHighglightColor;
     }
 
     private void OnMouseDown()
     {
-/*        if (!EventSystem.current.IsPointerOverGameObject()) // Prevent UI clicks
-*/            OnTileClicked?.Invoke(this);
+        OnTileClicked?.Invoke(this);
     }
 
     private void OnMouseEnter()
     {
-/*        if (!EventSystem.current.IsPointerOverGameObject())
-*/            OnTileHovered?.Invoke(this);
+        OnTileHovered?.Invoke(this);
     }
 
-    public void SetHighlight(bool active, Color? color = null)
+    private void OnMouseExit()
+    {
+        OnTileUnHovered?.Invoke(this);
+    }
+
+    public void SetHighlight(bool active, bool reachable = false)
     {
         if (highlightRenderer != null)
         {
             highlightRenderer.enabled = active;
-/*            highlightRenderer.color = color ?? Color.yellow;
-*/        }
+            highlightRenderer.color = reachable ? insideRangeHighglightColor : outOFRangeHighglightColor;
+        }
     }
 }

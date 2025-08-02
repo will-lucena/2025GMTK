@@ -4,78 +4,89 @@ using UnityEngine;
 
 public class Boomerang : MonoBehaviour
 {
-    public PlayerUnit owner;
-    public List<Tile> throwPath = new();
-    private bool returning = false;
     public float moveSpeed = 5f;
+    public int maxDistance = 99;
+    public float lerpDuration = 5f;
+    public bool isMoving = false;
+    public bool isReturning = false;
 
-    public void Initialize(Tile startTile, Vector2Int dir, int maxDistance, GridManager grid)
+    private PlayerUnit owner;
+    private Vector3 targetPosition;
+    private EnemyUnit inCollisionEnemy;
+    private Collider2D collider;
+
+    private void Awake()
     {
-        owner = startTile.unit as PlayerUnit;
-        throwPath.Clear();
-        returning = false;
+        collider = GetComponent<Collider2D>();
+        collider.enabled = false;
+    }
 
-        Vector2Int pos = new Vector2Int(startTile.x, startTile.y);
-
-        for (int i = 1; i <= maxDistance; i++)
+    public void Initialize(PlayerUnit owner, Tile targetPosition = null)
+    {
+        this.owner = owner;
+        if (targetPosition != null)
         {
-            pos += dir;
-            Tile tile = grid.GetTileAtPosition(pos.x, pos.y);
-            if (tile == null) break;
-            throwPath.Add(tile);
-
-            if (tile.unit != null) break;
+            this.targetPosition = targetPosition.transform.position;
+        } else
+        {
+            this.targetPosition = Vector3.zero;
         }
-
-        transform.position = startTile.transform.position;
+            transform.position = owner.transform.position;
     }
 
     public void ExecuteThrow()
     {
-        StartCoroutine(MoveAlongPath(new List<Tile>(throwPath), forward: true));
+        transform.parent = null;
+        collider.enabled = true;
+        StartCoroutine(LerpToTargetPosition(transform.position, targetPosition));
+    }
+
+    IEnumerator LerpToTargetPosition(Vector3 initialPosition, Vector3 targetPosition)
+    {
+        isMoving = true;
+        Vector3 startPos = transform.position;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < lerpDuration)
+        {
+            transform.position = Vector3.Lerp(startPos, targetPosition, elapsedTime / lerpDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null; // Wait for the next frame
+        }
+
+        transform.position = targetPosition; // Ensure it reaches the exact target position
+        isMoving = false;
+
+        if (isReturning)
+        {
+            collider.enabled = false;
+        } else
+        {
+            owner.BoomerageThrew();
+        }
+        isReturning = false;
+        if (owner.transform.position == transform.position) transform.parent = owner.transform;
     }
 
     public void ExecuteReturn()
     {
-        List<Tile> returnPath = new List<Tile>(throwPath);
-        returnPath.Reverse();
-        StartCoroutine(MoveAlongPath(returnPath, forward: false));
+        isReturning = true;
+        StartCoroutine(LerpToTargetPosition(transform.position, owner.transform.position));
     }
 
-    private IEnumerator MoveAlongPath(List<Tile> path, bool forward)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        foreach (var tile in path)
+        collision.gameObject.TryGetComponent<EnemyUnit>(out inCollisionEnemy);
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        EnemyUnit enemy;
+        collision.gameObject.TryGetComponent<EnemyUnit>(out enemy);
+
+        if (inCollisionEnemy == enemy)
         {
-            Vector3 start = transform.position;
-            Vector3 end = tile.transform.position;
-            float t = 0f;
-
-            while (t < 1f)
-            {
-                t += Time.deltaTime * moveSpeed;
-                transform.position = Vector3.Lerp(start, end, t);
-                yield return null;
-            }
-
-            // Hit detection
-            if (tile.unit != null && tile.unit != owner)
-            {
-                tile.unit.TakeDamage(1);
-                break;
-            }
-
-            yield return new WaitForSeconds(0.05f); // Small delay between tiles
-        }
-
-        if (forward)
-        {
-            returning = true;
-            TurnManager.Instance.QueueBoomerangReturn();
-        }
-        else
-        {
-            owner.boomerangInAir = false;
-            Destroy(gameObject);
+            inCollisionEnemy.TakeDamage();
         }
     }
 }

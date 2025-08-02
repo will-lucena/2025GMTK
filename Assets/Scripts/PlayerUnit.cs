@@ -1,147 +1,149 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerUnit : Unit
 {
     public GameObject boomerangPrefab;
-    public bool boomerangInAir = false;
 
     private Boomerang activeBoomerang;
-    private bool targetingBoomerang = false;
-    private List<Tile> previewPath = new List<Tile>();
+    private Tile currentHoverTile;
+
+    private void Awake()
+    {
+        WatchGrid();
+        activeBoomerang = Instantiate(boomerangPrefab, transform).GetComponent<Boomerang>();
+        activeBoomerang.Initialize(this); // ignore range for now
+
+    }
 
     void Update()
     {
-        if (!boomerangInAir && !targetingBoomerang && Input.GetKeyDown(KeyCode.Space))
-        {
-            targetingBoomerang = true;
-            gridManager.HighlightAllTiles(true);
-            Tile.OnTileClicked += OnTileSelected;
-            Tile.OnTileHovered += OnTileHover;
-
-            /*boomerangInAir = true;
-            gridManager.HighlightAllTiles(true);
-            Tile.OnTileClicked += OnTileSelected;
-
-            Vector2Int dir = new Vector2Int(1, 0); // TEMP: Always throws right
-            Boomerang boomerang = Instantiate(boomerangPrefab).GetComponent<Boomerang>();
-            activeBoomerang = boomerang;
-
-            Tile myTile = gridManager.GetTileAtPosition(x, y);
-            activeBoomerang.Initialize(myTile, dir, 5, gridManager);
-            activeBoomerang.ExecuteThrow();
-
-            targetingBoomerang = false;
-            gridManager.HighlightAllTiles(false);
-            Tile.OnTileClicked -= OnTileSelected;l*/
-        }
-
-        if (!boomerangInAir)
-        {
-            if (Input.GetKeyDown(KeyCode.W)) TryMove(x, y + 1);
-            if (Input.GetKeyDown(KeyCode.S)) TryMove(x, y - 1);
-            if (Input.GetKeyDown(KeyCode.A)) TryMove(x - 1, y);
-            if (Input.GetKeyDown(KeyCode.D)) TryMove(x + 1, y);
-        }
-        else
+        HandleKeyboardInputs();
+        if (CanCallBoomerang() && TryGetInput(KeyCode.Space))
         {
             ReceiveBoomerangReturn();
+        } 
+    }
+
+
+    private void WatchGrid()
+    {
+        Tile.OnTileClicked += OnTileSelected;
+        Tile.OnTileHovered += OnTileHover;
+        Tile.OnTileUnHovered += OnTileUnhover;
+    }
+
+    private void HandleKeyboardInputs()
+    {
+        if (CanMove()) {
+            if (TryGetInput(KeyCode.W)) TryMove(x, y + 1);
+            if (TryGetInput(KeyCode.S)) TryMove(x, y - 1);
+            if (TryGetInput(KeyCode.A)) TryMove(x - 1, y);
+            if (TryGetInput(KeyCode.D)) TryMove(x + 1, y);
         }
+    }
+
+    private bool CanCallBoomerang()
+    {
+        if (!activeBoomerang) return false;
+        if (!activeBoomerang.isMoving) return true;
+        return IsBoomerangInAir();
+    }
+
+    private bool CanThrowBoomerang(Tile targetTile)
+    {
+        if (!activeBoomerang) return true;
+        if (activeBoomerang.isMoving || activeBoomerang.isReturning) return false;
+        if (IsBoomerangInAir()) return false;
+        return CalculateDistance(targetTile) <= activeBoomerang.maxDistance;
+    }
+
+    private bool CanMove()
+    {
+        if (!TurnManager.Instance.IsPlayerTurn()) return false;
+        if (!activeBoomerang) return true;
+        return !activeBoomerang.isReturning;
+    }
+
+    private bool TryGetInput(KeyCode keyCode)
+    {
+        if (!TurnManager.Instance.IsPlayerTurn()) return false;
+        return Input.GetKeyDown(keyCode);
     }
 
     void TryMove(int targetX, int targetY)
     {
-        if (gridManager.GetTileAtPosition(targetX, targetY) != null)
+        if (GridManager.Instance.GetTileAtPosition(targetX, targetY) != null)
         {
             MoveTo(targetX, targetY);
+            OnTileHover(currentHoverTile);
         }
     }
-
-   /* void ThrowBoomerang(int dx, int dy)
-    {
-        int maxRange = 4;
-        for (int i = 1; i <= maxRange; i++)
-        {
-            int tx = x + dx * i;
-            int ty = y + dy * i;
-            Tile tile = gridManager.GetTileAtPosition(tx, ty);
-            if (tile == null) break;
-
-            Debug.Log($"Boomerang hits tile: {tx}, {ty}");
-            // You could add logic here to hit enemies or trigger tile effects.
-
-            returnTarget = new Vector2Int(tx, ty);
-        }
-
-        boomerangInAir = true;
-    }*/
 
     public void ReceiveBoomerangReturn()
     {
         if (activeBoomerang != null)
+        {
             activeBoomerang.ExecuteReturn();
+        }
+    }
+
+    public bool IsBoomerangInAir()
+    {
+        return activeBoomerang?.transform.parent == null;
+    }
+
+    public void BoomerageThrew()
+    {
+        TurnManager.Instance.EndPlayerTurn();
     }
 
     private void OnTileSelected(Tile targetTile)
     {
-        Tile myTile = gridManager.GetTileAtPosition(x, y);
-        Vector2Int dir = new Vector2Int(
-            Mathf.Clamp(targetTile.x - x, -1, 1),
-            Mathf.Clamp(targetTile.y - y, -1, 1)
-        );
+        if (CanThrowBoomerang(targetTile))
+        {
+            Tile currentTile = GridManager.Instance.GetTileAtPosition(x, y);
 
-        if (dir == Vector2Int.zero) return;
+            if (currentTile == targetTile) return;
 
-        GameObject b = Instantiate(boomerangPrefab);
-        Boomerang boomerang = b.GetComponent<Boomerang>();
-        boomerang.Initialize(myTile, dir, 99, gridManager); // ignore range for now
-        boomerang.ExecuteThrow();
-
-        boomerangInAir = true;
-        activeBoomerang = boomerang;
-
-        // Cleanup
-        targetingBoomerang = false;
-        gridManager.HighlightAllTiles(false);
-        Tile.OnTileClicked -= OnTileSelected;
-        Tile.OnTileHovered -= OnTileHover;
-        ClearPathPreview();
-        TurnManager.Instance.EndPlayerTurn();
+            activeBoomerang.Initialize(this, targetTile); // ignore range for now
+            activeBoomerang.ExecuteThrow();
+        }
     }
 
     private void OnTileHover(Tile targetTile)
     {
-        if (!targetingBoomerang) return;
+        currentHoverTile = targetTile;
 
-        ClearPathPreview();
+        if (IsBoomerangInAir() || targetTile == null) return;
 
-        Vector2Int dir = new Vector2Int(
-            Mathf.Clamp(targetTile.x - x, -1, 1),
-            Mathf.Clamp(targetTile.y - y, -1, 1)
-        );
-
-        if (dir == Vector2Int.zero) return;
-
-        Vector2Int pos = new Vector2Int(x, y);
-
-        while (true)
+        if (CalculateDistance(targetTile) <= activeBoomerang.maxDistance)
         {
-            pos += dir;
-            Tile tile = gridManager.GetTileAtPosition(pos.x, pos.y);
-            if (tile == null) break;
-
-            previewPath.Add(tile);
-            tile.SetHighlight(true); // Optional: use a different color for preview?
+            targetTile.SetHighlight(true, true);
+        } else
+        {
+            targetTile.SetHighlight(true, false);
         }
     }
 
-    private void ClearPathPreview()
+    private float CalculateDistance(Tile targetTile)
     {
-        foreach (Tile t in previewPath)
-            t.SetHighlight(false);
-
-        previewPath.Clear();
+        if (targetTile == null) return Mathf.Infinity;
+        return Vector2.Distance((Vector2)transform.position, (Vector2)targetTile.transform.position);
     }
 
+    private void OnTileUnhover(Tile targetTile)
+    {
+        currentHoverTile = null;
+        targetTile.SetHighlight(false);
+    }
+
+    private void OnDestroy()
+    {
+        Tile.OnTileClicked -= OnTileSelected;
+        Tile.OnTileHovered -= OnTileHover;
+        Tile.OnTileUnHovered -= OnTileUnhover;
+    }
 }

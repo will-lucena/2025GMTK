@@ -3,48 +3,67 @@ using UnityEngine;
 
 public class TurnManager : MonoBehaviour
 {
-    public static TurnManager Instance;
-    private void Awake() => Instance = this;
-
-    public enum GamePhase { PlayerTurn, BoomerangReturn, EnemyTurn }
-    public GamePhase phase = GamePhase.PlayerTurn;
-
-    public PlayerUnit player;
-
-    void Update()
+    public static TurnManager Instance { get; private set; }
+    private void Awake()
     {
-        if (phase == GamePhase.BoomerangReturn)
+        if (Instance != null && Instance != this)
         {
-            if (phase == GamePhase.BoomerangReturn)
-            {
-                StartCoroutine(DelayedBoomerangReturn());
-            }
-            phase = GamePhase.EnemyTurn;
+            Destroy(gameObject);
+            return;
         }
-        else if (phase == GamePhase.EnemyTurn)
+        else
         {
-            // Add enemy AI loop here
-            phase = GamePhase.PlayerTurn;
+            Instance = this;
         }
+    }
+
+    public enum GamePhase { PlayerTurn, EnemyTurn, None }
+    public GamePhase phase = GamePhase.PlayerTurn;
+    public EnemyTurnProgressUI enemyTurnUI;
+    public PlayerUnit player;
+    [SerializeField] private int turnCount = 0;
+
+    private void StartEnemyTurn()
+    {
+        phase = GamePhase.EnemyTurn;
+        enemyTurnUI.StartProgress(2f); // 2 seconds duration
+        enemyTurnUI.OnComplete += RunEnemyAI;
+    }
+    public void StartPlayerTurn()
+    {
+        turnCount++;
+
+        if (turnCount >= 2)
+        {
+            SceneManager.Instance.loadLevel(3);
+        }
+
+        phase = GamePhase.PlayerTurn;
+    }
+
+    private void RunEnemyAI()
+    {
+        enemyTurnUI.OnComplete -= RunEnemyAI;
+
+        // Perform enemy actions here
+        // Then call EndEnemyTurn();
+
+        StartPlayerTurn();
     }
 
     public void EndPlayerTurn()
     {
-        phase = GamePhase.BoomerangReturn;
+        StartEnemyTurn();
     }
 
-    public void QueueBoomerangReturn()
+    public bool IsPlayerTurn()
     {
-        phase = GamePhase.BoomerangReturn;
+        return phase == GamePhase.PlayerTurn;
     }
 
-    private IEnumerator DelayedBoomerangReturn()
+    public void Reset()
     {
-        phase = GamePhase.BoomerangReturn;
-        yield return new WaitForSeconds(0.1f);
-        player.ReceiveBoomerangReturn();
-        yield return new WaitUntil(() => player.boomerangInAir == false);
-        phase = GamePhase.EnemyTurn;
+        phase = GamePhase.None;
+        turnCount = 0;
     }
-
 }
