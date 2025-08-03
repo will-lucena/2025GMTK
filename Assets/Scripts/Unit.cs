@@ -4,9 +4,18 @@ using UnityEngine;
 
 public abstract class Unit : MonoBehaviour
 {
-    public int x;
-    public int y;
-    public int moveRange = 1;
+    [SerializeField] protected int x;
+    [SerializeField] protected int y;
+    [SerializeField] protected int moveRange = 1;
+    [SerializeField] protected int maxHp;
+    public int currentHp { get; protected set; }
+    protected Animator animator;
+
+    protected virtual void Awake()
+    {
+        animator = GetComponent<Animator>();
+        currentHp = maxHp;
+    }
 
     public virtual void Init(int startX, int startY)
     {
@@ -24,8 +33,7 @@ public abstract class Unit : MonoBehaviour
 
     public virtual void TakeDamage(int damage = 1)
     {
-        Destroy(gameObject);
-        SceneManager.Instance.loadLevel(2);
+        currentHp -= damage;
     }
 
     private void move(int x, int y)

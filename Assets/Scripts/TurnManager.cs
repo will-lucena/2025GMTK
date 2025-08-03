@@ -40,9 +40,16 @@ public class TurnManager : Singleton<TurnManager>
 
     private void StartEnemyTurn()
     {
-        phase = GamePhase.EnemyTurn;
-        enemyTurnUI.StartProgress(2f); // 2 seconds duration
-        enemyTurnUI.OnComplete += RunEnemyAI;
+        if (GridManager.Instance.HasEnemiesAlive()) {
+            phase = GamePhase.EnemyTurn;
+            enemyTurnUI.StartProgress(2f); // 2 seconds duration
+            enemyTurnUI.OnComplete += RunEnemyAI;
+        } else
+        {
+            turnCount--;
+            StartPlayerTurn();
+        }
+        
     }
 
     private void RunEnemyAI()

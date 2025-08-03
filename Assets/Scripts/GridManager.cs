@@ -50,4 +50,9 @@ public class GridManager : Singleton<GridManager>
     {
         return GetTileAtPosition(position.x, position.y);
     }
+
+    public bool HasEnemiesAlive()
+    {
+        return enemies.Any(enemy => enemy.currentHp > 0);
+    }
 }

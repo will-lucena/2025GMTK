@@ -11,11 +11,13 @@ public class PlayerUnit : Unit
     private Tile currentHoverTile;
     private Boomerang activeBoomerang;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         WatchGrid();
         activeBoomerang = Instantiate(boomerangPrefab, rightHandTransform).GetComponent<Boomerang>();
         activeBoomerang.Initialize(this); // ignore range for now
+        UIManager.Instance.DisableCatchCommandLabel();
     }
 
     private void Update()
@@ -68,9 +70,16 @@ public class PlayerUnit : Unit
         return activeBoomerang?.transform.parent == null;
     }
 
-    public void BoomerageThrew()
+    public void BoomerangeThrew()
     {
         TurnManager.Instance.EndPlayerTurn();
+    }
+
+    public void BoomerangeCatch()
+    {
+        animator.SetTrigger("Catch");
+        UIManager.Instance.EnableThrowCommandLabel();
+        UIManager.Instance.DisableCatchCommandLabel();
     }
 
     private void HandleKeyboardInputs()
@@ -115,6 +124,9 @@ public class PlayerUnit : Unit
 
             activeBoomerang.Initialize(this, targetTile);
             activeBoomerang.ExecuteThrow();
+            animator.SetTrigger("Throw");
+            UIManager.Instance.DisableThrowCommandLabel();
+            UIManager.Instance.EnableCatchCommandLabel();
         }
     }
 

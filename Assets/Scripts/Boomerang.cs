@@ -6,6 +6,7 @@ public class Boomerang : MonoBehaviour
 {
     [SerializeField] private int maxDistance = 99;
     [SerializeField] private float lerpDuration = 5f;
+    [SerializeField] private float rotationSpeed;
     public bool isMoving {  get; private set; }
     public bool isReturning {  get; private set; }
 
@@ -20,6 +21,14 @@ public class Boomerang : MonoBehaviour
     {
         collider = GetComponent<Collider2D>();
         collider.enabled = false;
+    }
+
+    private void LateUpdate()
+    {
+        if (transform.parent == null)
+        {
+            transform.Rotate(new Vector3(0, 0, rotationSpeed));
+        }
     }
 
     public void Initialize(PlayerUnit owner, Tile targetPosition = null)
@@ -38,19 +47,38 @@ public class Boomerang : MonoBehaviour
 
     public void ExecuteThrow()
     {
-        transform.parent = null;
-        collider.enabled = true;
-        StartCoroutine(LerpToTargetPosition(transform.position, targetPosition));
+        StartCoroutine(ThrowRoutine());
     }
     public void ExecuteReturn()
     {
+        StartCoroutine(CatchRoutine());
+    }
+
+    IEnumerator CatchRoutine()
+    {
         isReturning = true;
-        StartCoroutine(LerpToTargetPosition(transform.position, owner.WeaponParent().position));
+        isMoving = true;
+        yield return LerpToTargetPosition(transform.position, owner.WeaponParent().position);
+        isMoving = false;
+        isReturning = false;
+        collider.enabled = false;
+        transform.parent = owner.WeaponParent();
+        owner.BoomerangeCatch();
+    }
+
+    IEnumerator ThrowRoutine()
+    {
+        yield return new WaitForSeconds(.5f);
+        transform.parent = null;
+        collider.enabled = true;
+        isMoving = true;
+        yield return LerpToTargetPosition(transform.position, targetPosition);
+        isMoving = false;
+        owner.BoomerangeThrew();
     }
 
     IEnumerator LerpToTargetPosition(Vector3 initialPosition, Vector3 targetPosition)
     {
-        isMoving = true;
         Vector3 startPos = transform.position;
         float elapsedTime = 0f;
 
@@ -62,17 +90,6 @@ public class Boomerang : MonoBehaviour
         }
 
         transform.position = targetPosition; // Ensure it reaches the exact target position
-        isMoving = false;
-
-        if (isReturning)
-        {
-            collider.enabled = false;
-            transform.parent = owner.WeaponParent();
-        } else
-        {
-            owner.BoomerageThrew();
-        }
-        isReturning = false;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
