@@ -4,16 +4,17 @@ using UnityEngine;
 
 public class Boomerang : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public int maxDistance = 99;
-    public float lerpDuration = 5f;
-    public bool isMoving = false;
-    public bool isReturning = false;
+    [SerializeField] private int maxDistance = 99;
+    [SerializeField] private float lerpDuration = 5f;
+    public bool isMoving {  get; private set; }
+    public bool isReturning {  get; private set; }
 
     private PlayerUnit owner;
     private Vector3 targetPosition;
     private EnemyUnit inCollisionEnemy;
     private Collider2D collider;
+
+    public int MaxDistance {  get { return maxDistance; } }
 
     private void Awake()
     {
@@ -31,7 +32,8 @@ public class Boomerang : MonoBehaviour
         {
             this.targetPosition = Vector3.zero;
         }
-            transform.position = owner.transform.position;
+
+        transform.localPosition = Vector3.zero;
     }
 
     public void ExecuteThrow()
@@ -39,6 +41,11 @@ public class Boomerang : MonoBehaviour
         transform.parent = null;
         collider.enabled = true;
         StartCoroutine(LerpToTargetPosition(transform.position, targetPosition));
+    }
+    public void ExecuteReturn()
+    {
+        isReturning = true;
+        StartCoroutine(LerpToTargetPosition(transform.position, owner.WeaponParent().position));
     }
 
     IEnumerator LerpToTargetPosition(Vector3 initialPosition, Vector3 targetPosition)
@@ -60,18 +67,12 @@ public class Boomerang : MonoBehaviour
         if (isReturning)
         {
             collider.enabled = false;
+            transform.parent = owner.WeaponParent();
         } else
         {
             owner.BoomerageThrew();
         }
         isReturning = false;
-        if (owner.transform.position == transform.position) transform.parent = owner.transform;
-    }
-
-    public void ExecuteReturn()
-    {
-        isReturning = true;
-        StartCoroutine(LerpToTargetPosition(transform.position, owner.transform.position));
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

@@ -41,12 +41,14 @@ public class Tile : MonoBehaviour
         OnTileUnHovered?.Invoke(this);
     }
 
-    public void SetHighlight(bool active, bool reachable = false)
+    public Color SetHighlight(bool active, bool reachable = false)
     {
         if (highlightRenderer != null)
         {
             highlightRenderer.enabled = active;
             highlightRenderer.color = reachable ? insideRangeHighglightColor : outOFRangeHighglightColor;
+            return highlightRenderer.color;
         }
+        return Color.white;
     }
 }

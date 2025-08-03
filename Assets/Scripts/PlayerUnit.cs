@@ -5,20 +5,20 @@ using UnityEngine;
 
 public class PlayerUnit : Unit
 {
-    public GameObject boomerangPrefab;
+    [SerializeField] private GameObject boomerangPrefab;
+    [SerializeField] private Transform rightHandTransform;
 
-    private Boomerang activeBoomerang;
     private Tile currentHoverTile;
+    private Boomerang activeBoomerang;
 
     private void Awake()
     {
         WatchGrid();
-        activeBoomerang = Instantiate(boomerangPrefab, transform).GetComponent<Boomerang>();
+        activeBoomerang = Instantiate(boomerangPrefab, rightHandTransform).GetComponent<Boomerang>();
         activeBoomerang.Initialize(this); // ignore range for now
-
     }
 
-    void Update()
+    private void Update()
     {
         HandleKeyboardInputs();
         if (CanCallBoomerang() && TryGetInput(KeyCode.Space))
@@ -27,22 +27,20 @@ public class PlayerUnit : Unit
         } 
     }
 
+    private void LateUpdate()
+    {
+        if (IsBoomerangInAir())
+        {
+            BoomerangLinePreview.Instance.ClearPath();
+            BoomerangLinePreview.Instance.ShowPath(activeBoomerang.transform.position, rightHandTransform.position);
+        }
+    }
 
     private void WatchGrid()
     {
         Tile.OnTileClicked += OnTileSelected;
         Tile.OnTileHovered += OnTileHover;
         Tile.OnTileUnHovered += OnTileUnhover;
-    }
-
-    private void HandleKeyboardInputs()
-    {
-        if (CanMove()) {
-            if (TryGetInput(KeyCode.W)) TryMove(x, y + 1);
-            if (TryGetInput(KeyCode.S)) TryMove(x, y - 1);
-            if (TryGetInput(KeyCode.A)) TryMove(x - 1, y);
-            if (TryGetInput(KeyCode.D)) TryMove(x + 1, y);
-        }
     }
 
     private bool CanCallBoomerang()
@@ -52,34 +50,9 @@ public class PlayerUnit : Unit
         return IsBoomerangInAir();
     }
 
-    private bool CanThrowBoomerang(Tile targetTile)
+    public Transform WeaponParent()
     {
-        if (!activeBoomerang) return true;
-        if (activeBoomerang.isMoving || activeBoomerang.isReturning) return false;
-        if (IsBoomerangInAir()) return false;
-        return CalculateDistance(targetTile) <= activeBoomerang.maxDistance;
-    }
-
-    private bool CanMove()
-    {
-        if (!TurnManager.Instance.IsPlayerTurn()) return false;
-        if (!activeBoomerang) return true;
-        return !activeBoomerang.isReturning;
-    }
-
-    private bool TryGetInput(KeyCode keyCode)
-    {
-        if (!TurnManager.Instance.IsPlayerTurn()) return false;
-        return Input.GetKeyDown(keyCode);
-    }
-
-    void TryMove(int targetX, int targetY)
-    {
-        if (GridManager.Instance.GetTileAtPosition(targetX, targetY) != null)
-        {
-            MoveTo(targetX, targetY);
-            OnTileHover(currentHoverTile);
-        }
+        return rightHandTransform;
     }
 
     public void ReceiveBoomerangReturn()
@@ -100,6 +73,38 @@ public class PlayerUnit : Unit
         TurnManager.Instance.EndPlayerTurn();
     }
 
+    private void HandleKeyboardInputs()
+    {
+        if (CanMove()) {
+            if (TryGetInput(KeyCode.W)) TryMove(x, y + 1);
+            if (TryGetInput(KeyCode.S)) TryMove(x, y - 1);
+            if (TryGetInput(KeyCode.A)) TryMove(x - 1, y);
+            if (TryGetInput(KeyCode.D)) TryMove(x + 1, y);
+        }
+    }
+
+    private bool CanMove()
+    {
+        if (!TurnManager.Instance.IsPlayerTurn()) return false;
+        if (!activeBoomerang) return true;
+        return !activeBoomerang.isReturning;
+    }
+
+    private bool TryGetInput(KeyCode keyCode)
+    {
+        if (!TurnManager.Instance.IsPlayerTurn()) return false;
+        return Input.GetKeyDown(keyCode);
+    }
+
+    private void TryMove(int targetX, int targetY)
+    {
+        if (GridManager.Instance.GetTileAtPosition(targetX, targetY) != null)
+        {
+            MoveTo(targetX, targetY);
+            OnTileHover(currentHoverTile);
+        }
+    }
+
     private void OnTileSelected(Tile targetTile)
     {
         if (CanThrowBoomerang(targetTile))
@@ -108,9 +113,25 @@ public class PlayerUnit : Unit
 
             if (currentTile == targetTile) return;
 
-            activeBoomerang.Initialize(this, targetTile); // ignore range for now
+            activeBoomerang.Initialize(this, targetTile);
             activeBoomerang.ExecuteThrow();
         }
+    }
+
+    private bool CanThrowBoomerang(Tile targetTile)
+    {
+        if (!activeBoomerang) return true;
+        if (activeBoomerang.isMoving || activeBoomerang.isReturning) return false;
+        if (IsBoomerangInAir()) return false;
+        return CalculateDistance(targetTile) <= activeBoomerang.MaxDistance;
+    }
+
+    private void OnTileUnhover(Tile targetTile)
+    {
+        currentHoverTile = null;
+        targetTile.SetHighlight(false);
+
+        BoomerangLinePreview.Instance.ClearPath();
     }
 
     private void OnTileHover(Tile targetTile)
@@ -119,25 +140,21 @@ public class PlayerUnit : Unit
 
         if (IsBoomerangInAir() || targetTile == null) return;
 
-        if (CalculateDistance(targetTile) <= activeBoomerang.maxDistance)
+        Color hightlightColor;
+        if (CalculateDistance(targetTile) <= activeBoomerang.MaxDistance)
         {
-            targetTile.SetHighlight(true, true);
+            hightlightColor = targetTile.SetHighlight(true, true);
         } else
         {
-            targetTile.SetHighlight(true, false);
+            hightlightColor = targetTile.SetHighlight(true, false);
         }
+        BoomerangLinePreview.Instance.ShowPath(rightHandTransform.position, targetTile.transform.position, hightlightColor);
     }
 
     private float CalculateDistance(Tile targetTile)
     {
         if (targetTile == null) return Mathf.Infinity;
         return Vector2.Distance((Vector2)transform.position, (Vector2)targetTile.transform.position);
-    }
-
-    private void OnTileUnhover(Tile targetTile)
-    {
-        currentHoverTile = null;
-        targetTile.SetHighlight(false);
     }
 
     private void OnDestroy()

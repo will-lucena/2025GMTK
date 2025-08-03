@@ -2,32 +2,15 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class SpawnerManager : MonoBehaviour
+public class SpawnerManager : Singleton<SpawnerManager>
 {
-    public static SpawnerManager Instance { get; private set; }
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        else
-        {
-            Instance = this;
-        }
-    }
-
     [Header("Prefabs")]
-    public GameObject playerPrefab;
-    public GameObject enemyPrefab;
-
-    [Header("References")]
-    public GridManager gridManager;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private GameObject enemyPrefab;
 
     [Header("Runtime Units")]
-    public PlayerUnit playerUnit;
-    public List<EnemyUnit> enemies = new List<EnemyUnit>();
+    private PlayerUnit playerUnit;
+    private List<EnemyUnit> enemies = new List<EnemyUnit>();
 
     public void SpawnPlayerAt(int x, int y)
     {
