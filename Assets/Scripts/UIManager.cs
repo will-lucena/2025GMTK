@@ -9,6 +9,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TextMeshProUGUI catchCommand;
     [SerializeField] private TextMeshProUGUI questLabel;
     [SerializeField] private TextMeshProUGUI turnCounter;
+    [SerializeField] private TextMeshProUGUI stepsCounter;
     [SerializeField] private TextMeshProUGUI[] movementCommands;
     [SerializeField] private Color disabledColor;
     [SerializeField] private Color enabledColor;
@@ -16,6 +17,7 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private UnityEngine.UI.Button congratzButton;
 
     private int maxTurns;
+    private int maxSteps;
 
     private void Start()
     {
@@ -23,7 +25,7 @@ public class UIManager : Singleton<UIManager>
         congratzButton.gameObject.SetActive(false);
     }
 
-    public void UpdateCounterLabel(int currentTurn, int maxTurns)
+    public void UpdateTurnCounterLabel(int currentTurn, int maxTurns)
     {
         this.maxTurns = maxTurns;
         turnCounter.SetText($"{currentTurn} / {maxTurns}");
@@ -32,6 +34,17 @@ public class UIManager : Singleton<UIManager>
     public void UpdateCounterLabel(int currentTurn)
     {
         turnCounter.SetText($"{currentTurn} / {maxTurns}");
+    }
+
+    public void UpdateStepsCounterLabel(int current, int max)
+    {
+        this.maxSteps = max;
+        stepsCounter.SetText($"{current} / {maxSteps}");
+    }
+
+    public void UpdateStepsCounterLabel(int current)
+    {
+        stepsCounter.SetText($"{current} / {maxSteps}");
     }
 
     public void DisableThrowCommandLabel()
@@ -54,10 +67,26 @@ public class UIManager : Singleton<UIManager>
         catchCommand.color = enabledColor;
     }
 
+    public void DisableMovementCommands()
+    {
+        foreach (var item in movementCommands)
+        {
+            item.color = disabledColor;
+        }
+    }
+
+    public void EnableMovementCommands()
+    {
+        foreach (var item in movementCommands)
+        {
+            item.color = enabledColor;
+        }
+    }
+
     public void UpdateControlButton()
     {
-        resetButton.gameObject.SetActive(false);
-        congratzButton.gameObject.SetActive(true);
-        questLabel.SetText("");
+        resetButton?.gameObject?.SetActive(false);
+        congratzButton?.gameObject?.SetActive(true);
+        questLabel?.SetText("");
     }
 }

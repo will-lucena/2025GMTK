@@ -6,8 +6,9 @@ public class TurnManager : Singleton<TurnManager>
     public enum GamePhase { PlayerTurn, EnemyTurn, None }
     public GamePhase phase {  get; private set; }
     [SerializeField] private EnemyTurnProgressUI enemyTurnUI;
-    [SerializeField] private PlayerUnit player;
     [SerializeField] private int turnCount = 0;
+
+    public System.Action<GamePhase> onPhaseChange;
 
     public void StartPlayerTurn()
     {
@@ -19,7 +20,7 @@ public class TurnManager : Singleton<TurnManager>
             SceneManager.Instance.loadLevel(3);
         }
 
-        phase = GamePhase.PlayerTurn;
+        ChangePhase(GamePhase.PlayerTurn);
     }
 
     public void EndPlayerTurn()
@@ -34,14 +35,20 @@ public class TurnManager : Singleton<TurnManager>
 
     public void Reset()
     {
-        phase = GamePhase.None;
+        ChangePhase(GamePhase.None);
         turnCount = 0;
+    }
+
+    private void ChangePhase(GamePhase phase)
+    {
+        this.phase = phase;
+        onPhaseChange?.Invoke(phase);
     }
 
     private void StartEnemyTurn()
     {
         if (GridManager.Instance.HasEnemiesAlive()) {
-            phase = GamePhase.EnemyTurn;
+            ChangePhase(GamePhase.EnemyTurn);
             enemyTurnUI.StartProgress(2f); // 2 seconds duration
             enemyTurnUI.OnComplete += RunEnemyAI;
         } else

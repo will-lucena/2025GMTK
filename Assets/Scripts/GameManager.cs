@@ -13,9 +13,9 @@ public class GameManager : MonoBehaviour
     {
         GridManager.Instance.GenerateGrid();
         SpawnerManager.Instance.SpawnPlayerAt(GridManager.Instance.width / 2, 0);
-        SpawnerManager.Instance.SpawnEnemyAt(GridManager.Instance.width / 2, GridManager.Instance.height / 2);
+        SpawnerManager.Instance.SpawnEnemyAt(GridManager.Instance.width / 2, GridManager.Instance.height / 2 + 1);
         TurnManager.Instance.StartPlayerTurn();
-        UIManager.Instance.UpdateCounterLabel(1, 4);
+        UIManager.Instance.UpdateTurnCounterLabel(1, 4);
     }
 
     private void OnDestroy()

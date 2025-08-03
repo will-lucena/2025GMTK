@@ -250,7 +250,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 0
-  moveRange: 1
+  maxMovementAmount: 2
+  maxHp: 10
   boomerangPrefab: {fileID: 4439899043254083323, guid: 38fbc7a34ce05514dba8a2fd400c00d4, type: 3}
   rightHandTransform: {fileID: 8497639882654675561}
 --- !u!95 &73732815446683326

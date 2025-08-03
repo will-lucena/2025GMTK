@@ -10,7 +10,7 @@ public class PlayerUnit : Unit
 
     private Tile currentHoverTile;
     private Boomerang activeBoomerang;
-
+    
     protected override void Awake()
     {
         base.Awake();
@@ -18,6 +18,8 @@ public class PlayerUnit : Unit
         activeBoomerang = Instantiate(boomerangPrefab, rightHandTransform).GetComponent<Boomerang>();
         activeBoomerang.Initialize(this); // ignore range for now
         UIManager.Instance.DisableCatchCommandLabel();
+        UIManager.Instance.UpdateStepsCounterLabel(stepsAvailable, maxMovementAmount);
+        TurnManager.Instance.onPhaseChange += OnTurnPhaseChange;
     }
 
     private void Update()
@@ -82,6 +84,13 @@ public class PlayerUnit : Unit
         UIManager.Instance.DisableCatchCommandLabel();
     }
 
+    public override void ResetMovement()
+    {
+        base.ResetMovement();
+        UIManager.Instance.UpdateStepsCounterLabel(stepsAvailable);
+        UIManager.Instance.EnableMovementCommands();
+    }
+
     private void HandleKeyboardInputs()
     {
         if (CanMove()) {
@@ -102,6 +111,11 @@ public class PlayerUnit : Unit
     private bool TryGetInput(KeyCode keyCode)
     {
         if (!TurnManager.Instance.IsPlayerTurn()) return false;
+        if (keyCode != KeyCode.Space && stepsAvailable == 0)
+        {
+            UIManager.Instance.DisableMovementCommands();
+            return false;
+        }
         return Input.GetKeyDown(keyCode);
     }
 
@@ -111,6 +125,15 @@ public class PlayerUnit : Unit
         {
             MoveTo(targetX, targetY);
             OnTileHover(currentHoverTile);
+            stepsAvailable--;
+            UIManager.Instance.UpdateStepsCounterLabel(stepsAvailable);
+        }
+    }
+
+    private void OnTurnPhaseChange(TurnManager.GamePhase gamePhase)
+    {
+        if (gamePhase == TurnManager.GamePhase.PlayerTurn) {
+            ResetMovement();
         }
     }
 

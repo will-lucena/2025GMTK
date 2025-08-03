@@ -12,7 +12,6 @@ public class Boomerang : MonoBehaviour
 
     private PlayerUnit owner;
     private Vector3 targetPosition;
-    private EnemyUnit inCollisionEnemy;
     private Collider2D collider;
 
     public int MaxDistance {  get { return maxDistance; } }
@@ -94,7 +93,13 @@ public class Boomerang : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        collision.gameObject.TryGetComponent<EnemyUnit>(out inCollisionEnemy);
+        EnemyUnit enemy;
+        collision.gameObject.TryGetComponent<EnemyUnit>(out enemy);
+
+        if (enemy != null) {
+            enemy.TakeDamage();
+            enemy = null;
+        }
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -102,9 +107,10 @@ public class Boomerang : MonoBehaviour
         EnemyUnit enemy;
         collision.gameObject.TryGetComponent<EnemyUnit>(out enemy);
 
-        if (inCollisionEnemy == enemy)
+        if (enemy != null)
         {
-            inCollisionEnemy.TakeDamage();
+            enemy.TakeDamage();
+            enemy = null;
         }
     }
 }

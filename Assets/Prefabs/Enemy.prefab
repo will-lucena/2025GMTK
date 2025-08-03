@@ -254,8 +254,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   x: 0
   y: 0
-  moveRange: 1
-  maxHp: 0
+  maxMovementAmount: 1
+  maxHp: 2
 --- !u!50 &-7140611453567666260
 Rigidbody2D:
   serializedVersion: 4
