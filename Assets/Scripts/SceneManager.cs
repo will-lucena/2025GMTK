@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class SceneManager : Singleton<SceneManager>
 {
-    public enum DefaultLevels { Menu = 2, Congratz = 0, Gameover = 1}
+    public enum DefaultLevels { Menu = 3, Congratz = 1, Gameover = 2}
 
     protected override void Awake()
     {
@@ -21,7 +21,7 @@ public class SceneManager : Singleton<SceneManager>
     public void LoadNextLevel()
     {
         int currentSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
-        if (SceneUtility.GetBuildIndexByScenePath($"Level {currentSceneIndex -1 }") != -1) LoadLevel(currentSceneIndex + 1);
+        if (SceneUtility.GetBuildIndexByScenePath($"Level {currentSceneIndex -2 }") != -1) LoadLevel(currentSceneIndex + 1);
         else LoadCongratz();
     }
 
