@@ -51,4 +51,9 @@ public class Tile : MonoBehaviour
         }
         return Color.white;
     }
+
+    public Vector2Int ToVector2Int()
+    {
+        return new Vector2Int(x, y);
+    }
 }

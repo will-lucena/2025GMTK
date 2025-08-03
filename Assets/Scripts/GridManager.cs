@@ -51,8 +51,25 @@ public class GridManager : Singleton<GridManager>
         return GetTileAtPosition(position.x, position.y);
     }
 
+    public Tile GetTileAtPosition(Vector3 position)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (tiles[x, y].transform.position == position) return tiles[x, y];
+            }
+        }
+        return null;
+    }
+
     public bool HasEnemiesAlive()
     {
         return enemies.Any(enemy => enemy.currentHp > 0);
+    }
+
+    public void RunEnemiesTurn()
+    {
+        enemies.ForEach(enemy => { enemy.TakeTurn(); });
     }
 }

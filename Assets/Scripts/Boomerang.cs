@@ -15,6 +15,7 @@ public class Boomerang : MonoBehaviour
     private Collider2D collider;
 
     public int MaxDistance {  get { return maxDistance; } }
+    public Tile currentTile { get; private set; }
 
     private void Awake()
     {
@@ -89,6 +90,7 @@ public class Boomerang : MonoBehaviour
         }
 
         transform.position = targetPosition; // Ensure it reaches the exact target position
+        currentTile = GridManager.Instance.GetTileAtPosition(transform.position);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

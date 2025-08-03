@@ -9,7 +9,7 @@ public class PlayerUnit : Unit
     [SerializeField] private Transform rightHandTransform;
 
     private Tile currentHoverTile;
-    private Boomerang activeBoomerang;
+    public Boomerang activeBoomerang { get; private set; }
     
     protected override void Awake()
     {
@@ -119,15 +119,16 @@ public class PlayerUnit : Unit
         return Input.GetKeyDown(keyCode);
     }
 
-    private void TryMove(int targetX, int targetY)
+    protected override bool TryMove(int targetX, int targetY)
     {
-        if (GridManager.Instance.GetTileAtPosition(targetX, targetY) != null)
+        if (base.TryMove(targetX, targetY))
         {
-            MoveTo(targetX, targetY);
             OnTileHover(currentHoverTile);
             stepsAvailable--;
             UIManager.Instance.UpdateStepsCounterLabel(stepsAvailable);
+            return true;
         }
+        return false;
     }
 
     private void OnTurnPhaseChange(TurnManager.GamePhase gamePhase)

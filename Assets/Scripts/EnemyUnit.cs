@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EnemyUnit : Unit
 {
-    public void Act(){
+    public virtual void TakeTurn(){
     }
 
     public override void TakeDamage(int damage = 1)

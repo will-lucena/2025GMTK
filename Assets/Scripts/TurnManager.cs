@@ -5,19 +5,25 @@ public class TurnManager : Singleton<TurnManager>
 {
     public enum GamePhase { PlayerTurn, EnemyTurn, None }
     public GamePhase phase {  get; private set; }
-    [SerializeField] private EnemyTurnProgressUI enemyTurnUI;
     [SerializeField] private int turnCount = 0;
+    [SerializeField] private float enemyTurnDuration = 2f;
+    [SerializeField] private int availableTurns = 4;
 
     public System.Action<GamePhase> onPhaseChange;
+
+    public int AvailableTurns()
+    {
+        return availableTurns;
+    }
 
     public void StartPlayerTurn()
     {
         turnCount++;
         UIManager.Instance.UpdateCounterLabel(turnCount);
 
-        if (turnCount >= 4)
+        if (turnCount >= availableTurns)
         {
-            SceneManager.Instance.loadLevel(3);
+            SceneManager.Instance.LoadLevel((int)SceneManager.DefaultLevels.Gameover);
         }
 
         ChangePhase(GamePhase.PlayerTurn);
@@ -49,8 +55,7 @@ public class TurnManager : Singleton<TurnManager>
     {
         if (GridManager.Instance.HasEnemiesAlive()) {
             ChangePhase(GamePhase.EnemyTurn);
-            enemyTurnUI.StartProgress(2f); // 2 seconds duration
-            enemyTurnUI.OnComplete += RunEnemyAI;
+            RunEnemyAI();
         } else
         {
             turnCount--;
@@ -61,7 +66,19 @@ public class TurnManager : Singleton<TurnManager>
 
     private void RunEnemyAI()
     {
-        enemyTurnUI.OnComplete -= RunEnemyAI;
+        UIManager.Instance.OnEnemyTurnFinished += OnFinishEnemyTurn;
+        UIManager.Instance.StartProgressBar(enemyTurnDuration);
+        GridManager.Instance.RunEnemiesTurn();
+    }
+
+    private void OnFinishEnemyTurn()
+    {
+        UIManager.Instance.OnEnemyTurnFinished -= OnFinishEnemyTurn;
         StartPlayerTurn();
+    }
+
+    private void OnDestroy()
+    {
+        UIManager.Instance.OnEnemyTurnFinished -= OnFinishEnemyTurn;
     }
 }

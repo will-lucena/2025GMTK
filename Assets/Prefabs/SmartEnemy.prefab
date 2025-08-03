@@ -213,12 +213,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8190582878060167296}
-  - component: {fileID: 3301261352388361158}
   - component: {fileID: -7140611453567666260}
   - component: {fileID: -8000196535327995092}
   - component: {fileID: -7878087180376284725}
+  - component: {fileID: -2372578316890303289}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: SmartEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -240,22 +240,6 @@ Transform:
   - {fileID: 444321595838811243}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3301261352388361158
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5372852511557581547}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2981147e9902e14dbe7f35a99c48e0e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  x: 0
-  y: 0
-  maxMovementAmount: 1
-  maxHp: 2
 --- !u!50 &-7140611453567666260
 Rigidbody2D:
   serializedVersion: 4
@@ -349,6 +333,22 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-2372578316890303289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5372852511557581547}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 951af4c15938f284c9f08dbcbf52c304, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  x: 0
+  y: 0
+  maxMovementAmount: 1
+  maxHp: 2
 --- !u!1 &5403082993980374867
 GameObject:
   m_ObjectHideFlags: 0

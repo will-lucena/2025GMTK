@@ -423,7 +423,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Concluir
+  m_text: Proximo level
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2cc5c27b1066d4144beb7ca0df52156d, type: 2}
   m_sharedMaterial: {fileID: 5237077406568027512, guid: 2cc5c27b1066d4144beb7ca0df52156d, type: 2}
@@ -450,7 +450,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24.55
+  m_fontSize: 23.9
   m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1123,7 +1123,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 7227207784386934706, guid: 06e15c693a7d3c346a530d65276ba21f, type: 3}
-  enemyPrefab: {fileID: 5372852511557581547, guid: 12b070bf2618f5e479da7eb5fdfb2da9, type: 3}
+  enemyPrefab: {fileID: 5372852511557581547, guid: 1acf10927bc844c40b6a63897c85817e, type: 3}
 --- !u!4 &1016697772
 Transform:
   m_ObjectHideFlags: 0
@@ -1487,8 +1487,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 3987220102948985759, guid: 19b8ab9ad142c8d41b57ccf5c11a6f35, type: 3}
         m_TargetAssemblyTypeName: SceneManager, Assembly-CSharp
-        m_MethodName: loadLevel
-        m_Mode: 3
+        m_MethodName: LoadNextLevel
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1896,8 +1896,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 436de5ad5b43ad148a03904bb9528312, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyTurnUI: {fileID: 5990480360882001007}
   turnCount: 0
+  enemyTurnDuration: 2
+  availableTurns: 4
 --- !u!4 &1807057700
 Transform:
   m_ObjectHideFlags: 0
@@ -2602,8 +2603,8 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 3987220102948985759, guid: 19b8ab9ad142c8d41b57ccf5c11a6f35, type: 3}
         m_TargetAssemblyTypeName: SceneManager, Assembly-CSharp
-        m_MethodName: loadLevel
-        m_Mode: 3
+        m_MethodName: ReloadCurrentLevel
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -4406,6 +4407,7 @@ MonoBehaviour:
   enabledColor: {r: 1, g: 1, b: 1, a: 1}
   resetButton: {fileID: 2484766596197085598}
   congratzButton: {fileID: 1369054550}
+  enemyTurnUI: {fileID: 5990480360882001007}
 --- !u!114 &9112906548990251768
 MonoBehaviour:
   m_ObjectHideFlags: 0

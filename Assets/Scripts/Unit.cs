@@ -8,9 +8,10 @@ public abstract class Unit : MonoBehaviour
     [SerializeField] protected int y;
     [SerializeField] protected int maxMovementAmount = 1;
     [SerializeField] protected int maxHp;
+    protected Animator animator;
     public int currentHp { get; protected set; }
     public int stepsAvailable { get; protected set; }
-    protected Animator animator;
+    public Tile currentTile { get; protected set; }
 
     protected virtual void Awake()
     {
@@ -24,6 +25,21 @@ public abstract class Unit : MonoBehaviour
         x = startX;
         y = startY;
         move(x, y);
+    }
+
+    protected virtual bool TryMove(int targetX, int targetY)
+    {
+        if (GridManager.Instance.GetTileAtPosition(targetX, targetY) != null)
+        {
+            MoveTo(targetX, targetY);
+            return true;
+        }
+        return false;
+    }
+
+    protected virtual bool TryMove(Tile targetTile)
+    {
+        return TryMove(targetTile.x, targetTile.y);
     }
 
     public virtual void MoveTo(int targetX, int targetY)
@@ -49,5 +65,6 @@ public abstract class Unit : MonoBehaviour
         tile.unit = this;
         Vector3 tilePosition = tile.transform.position;
         transform.position = tilePosition;
+        currentTile = tile;
     }
 }

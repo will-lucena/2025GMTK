@@ -15,9 +15,12 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private Color enabledColor;
     [SerializeField] private UnityEngine.UI.Button resetButton;
     [SerializeField] private UnityEngine.UI.Button congratzButton;
+    [SerializeField] private EnemyTurnProgressUI enemyTurnUI;
 
     private int maxTurns;
     private int maxSteps;
+
+    public System.Action OnEnemyTurnFinished;
 
     private void Start()
     {
@@ -88,5 +91,21 @@ public class UIManager : Singleton<UIManager>
         resetButton?.gameObject?.SetActive(false);
         congratzButton?.gameObject?.SetActive(true);
         questLabel?.SetText("");
+    }
+
+    public void StartProgressBar(float duration)
+    {
+        enemyTurnUI.OnComplete += OnCompleteProgressBar;
+        enemyTurnUI.StartProgress(duration);
+    }
+
+    private void OnCompleteProgressBar()
+    {
+        OnEnemyTurnFinished?.Invoke();
+    }
+
+    private void OnDestroy()
+    {
+        enemyTurnUI.OnComplete -= OnCompleteProgressBar;
     }
 }
