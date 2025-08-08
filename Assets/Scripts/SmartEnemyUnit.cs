@@ -6,10 +6,12 @@ public class SmartEnemyUnit : EnemyUnit
 {
     public override void TakeTurn()
     {
-        Vector2Int playerPos = GridManager.Instance.player.currentTile.ToVector2Int();
-        Vector2Int boomerangPos = GridManager.Instance.player.activeBoomerang.currentTile.ToVector2Int();
+        Vector2Int playerPos = GridManager.Instance.playerTile.ToVector2Int();
+        Vector2Int boomerangPos = GridManager.Instance.weaponTile.ToVector2Int();
 
-        Vector2Int awayDir = GetOppositeDirection(playerPos, boomerangPos);
+        Tile currentTile = transform.parent.GetComponent<Tile>();
+
+        Vector2Int awayDir = GetOppositeDirection(currentTile, playerPos, boomerangPos);
         Vector2Int targetPos = currentTile.ToVector2Int() + awayDir;
 
         Tile targetTile = GridManager.Instance.GetTileAtPosition(targetPos.x, targetPos.y);
@@ -17,7 +19,7 @@ public class SmartEnemyUnit : EnemyUnit
         base.TryMove(targetTile);
     }
 
-    private Vector2Int GetOppositeDirection(Vector2Int playerPos, Vector2Int boomPos)
+    private Vector2Int GetOppositeDirection(Tile currentTile, Vector2Int playerPos, Vector2Int boomPos)
     {
         Vector2Int toPlayer = playerPos - currentTile.ToVector2Int();
         Vector2Int toBoom = boomPos - currentTile.ToVector2Int();

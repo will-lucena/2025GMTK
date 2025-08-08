@@ -7,23 +7,24 @@ public class SpawnerManager : Singleton<SpawnerManager>
     [Header("Prefabs")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject enemyPrefab;
+    [SerializeField] private GameObject weaponPrefab;
 
-    [Header("Runtime Units")]
-    private PlayerUnit playerUnit;
-    private List<EnemyUnit> enemies = new List<EnemyUnit>();
-
-    public void SpawnPlayerAt(int x, int y)
+    public PlayerUnit SpawnPlayerAt(int x, int y)
     {
-        playerUnit = Instantiate(playerPrefab).GetComponent<PlayerUnit>();
-        GridManager.Instance.player = playerUnit;
-        playerUnit.Init(x, y);
+        PlayerUnit playerUnit = Instantiate(playerPrefab).GetComponent<PlayerUnit>();
+        GridManager.Instance.PlacePlayer(playerUnit, x, y);
+        return playerUnit;
     }
 
     public void SpawnEnemyAt(int x, int y)
     {
         EnemyUnit enemyUnit = Instantiate(enemyPrefab).GetComponent<EnemyUnit>();
-        enemyUnit.Init(x, y);
-        enemies.Add(enemyUnit);
-        GridManager.Instance.enemies = enemies;
+        GridManager.Instance.PlaceEnemy(enemyUnit, x, y);
+    }
+
+    public void SpawnWeapon(Tile tile)
+    {
+        Boomerang weapon = Instantiate(weaponPrefab).GetComponent<Boomerang>();
+        GridManager.Instance.PlaceWeapon(weapon, tile);
     }
 }

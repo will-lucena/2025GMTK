@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Boomerang : MonoBehaviour
@@ -9,72 +10,69 @@ public class Boomerang : MonoBehaviour
     [SerializeField] private float rotationSpeed;
     public bool isMoving {  get; private set; }
     public bool isReturning {  get; private set; }
+    public bool held { get; private set; }
 
     private PlayerUnit owner;
-    private Vector3 targetPosition;
     private Collider2D collider;
 
     public int MaxDistance {  get { return maxDistance; } }
-    public Tile currentTile { get; private set; }
 
     private void Awake()
     {
         collider = GetComponent<Collider2D>();
         collider.enabled = false;
+        held = true; // Start with the boomerang held
     }
 
     private void LateUpdate()
     {
-        if (transform.parent == null)
+        if (held == false)
         {
             transform.Rotate(new Vector3(0, 0, rotationSpeed));
         }
     }
 
-    public void Initialize(PlayerUnit owner, Tile targetPosition = null)
+    public void Initialize(PlayerUnit owner)
     {
         this.owner = owner;
-        if (targetPosition != null)
-        {
-            this.targetPosition = targetPosition.transform.position;
-        } else
-        {
-            this.targetPosition = Vector3.zero;
-        }
-
         transform.localPosition = Vector3.zero;
     }
 
-    public void ExecuteThrow()
+    public void ExecuteThrow(Tile targetTile, ICommandInvoker invoker)
     {
-        StartCoroutine(ThrowRoutine());
+        StartCoroutine(ThrowRoutine(targetTile, invoker));
     }
-    public void ExecuteReturn()
+    public void ExecuteReturn(Vector3 targetPosition, ICommandInvoker invoker)
     {
-        StartCoroutine(CatchRoutine());
+        StartCoroutine(CatchRoutine(targetPosition, invoker));
     }
 
-    IEnumerator CatchRoutine()
+    IEnumerator CatchRoutine(Vector3 targetPosition, ICommandInvoker invoker)
     {
         isReturning = true;
         isMoving = true;
-        yield return LerpToTargetPosition(transform.position, owner.WeaponParent().position);
+        /*owner.WeaponParent().position;*/
+        yield return LerpToTargetPosition(transform.position, targetPosition);
         isMoving = false;
         isReturning = false;
         collider.enabled = false;
-        transform.parent = owner.WeaponParent();
+        held = true;
         owner.BoomerangeCatch();
+        invoker.FinishedCommandExecution(null);
     }
 
-    IEnumerator ThrowRoutine()
+    IEnumerator ThrowRoutine(Tile targetTile, ICommandInvoker invoker)
     {
         yield return new WaitForSeconds(.5f);
         transform.parent = null;
+        held = false;
         collider.enabled = true;
         isMoving = true;
-        yield return LerpToTargetPosition(transform.position, targetPosition);
+        yield return LerpToTargetPosition(transform.position, targetTile.gameObject.transform.position);
         isMoving = false;
+        GridManager.Instance.AssignWeaponToTile(targetTile, transform);
         owner.BoomerangeThrew();
+        invoker.FinishedCommandExecution(null);
     }
 
     IEnumerator LerpToTargetPosition(Vector3 initialPosition, Vector3 targetPosition)
@@ -89,8 +87,7 @@ public class Boomerang : MonoBehaviour
             yield return null; // Wait for the next frame
         }
 
-        transform.position = targetPosition; // Ensure it reaches the exact target position
-        currentTile = GridManager.Instance.GetTileAtPosition(transform.position);
+        transform.position = targetPosition;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

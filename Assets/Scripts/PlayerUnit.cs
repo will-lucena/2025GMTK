@@ -7,28 +7,19 @@ public class PlayerUnit : Unit
 {
     [SerializeField] private GameObject boomerangPrefab;
     [SerializeField] private Transform rightHandTransform;
+    [SerializeField] private ActionsManager actionsManager;
 
     private Tile currentHoverTile;
-    public Boomerang activeBoomerang { get; private set; }
-    
+    public Boomerang activeWeapon { get; private set; }
+    public bool boomerangHeld { get; private set; }
+
     protected override void Awake()
     {
         base.Awake();
         WatchGrid();
-        activeBoomerang = Instantiate(boomerangPrefab, rightHandTransform).GetComponent<Boomerang>();
-        activeBoomerang.Initialize(this); // ignore range for now
         UIManager.Instance.DisableCatchCommandLabel();
         UIManager.Instance.UpdateStepsCounterLabel(stepsAvailable, maxMovementAmount);
         TurnManager.Instance.onPhaseChange += OnTurnPhaseChange;
-    }
-
-    private void Update()
-    {
-        HandleKeyboardInputs();
-        if (CanCallBoomerang() && TryGetInput(KeyCode.Space))
-        {
-            ReceiveBoomerangReturn();
-        } 
     }
 
     private void LateUpdate()
@@ -36,21 +27,20 @@ public class PlayerUnit : Unit
         if (IsBoomerangInAir())
         {
             BoomerangLinePreview.Instance.ClearPath();
-            BoomerangLinePreview.Instance.ShowPath(activeBoomerang.transform.position, rightHandTransform.position);
+            BoomerangLinePreview.Instance.ShowPath(activeWeapon.transform.position, rightHandTransform.position);
         }
     }
 
     private void WatchGrid()
     {
-        Tile.OnTileClicked += OnTileSelected;
         Tile.OnTileHovered += OnTileHover;
         Tile.OnTileUnHovered += OnTileUnhover;
     }
 
     private bool CanCallBoomerang()
     {
-        if (!activeBoomerang) return false;
-        if (!activeBoomerang.isMoving) return true;
+        if (!activeWeapon) return false;
+        if (!activeWeapon.isMoving) return true;
         return IsBoomerangInAir();
     }
 
@@ -59,21 +49,14 @@ public class PlayerUnit : Unit
         return rightHandTransform;
     }
 
-    public void ReceiveBoomerangReturn()
-    {
-        if (activeBoomerang != null)
-        {
-            activeBoomerang.ExecuteReturn();
-        }
-    }
-
     public bool IsBoomerangInAir()
     {
-        return activeBoomerang?.transform.parent == null;
+        return activeWeapon?.transform.parent == null;
     }
 
     public void BoomerangeThrew()
     {
+        boomerangHeld = false;
         TurnManager.Instance.EndPlayerTurn();
     }
 
@@ -82,6 +65,10 @@ public class PlayerUnit : Unit
         animator.SetTrigger("Catch");
         UIManager.Instance.EnableThrowCommandLabel();
         UIManager.Instance.DisableCatchCommandLabel();
+
+        activeWeapon.transform.parent = rightHandTransform;
+        boomerangHeld = true;
+        GridManager.Instance.AssignWeaponToTile(GridManager.Instance.playerTile);
     }
 
     public override void ResetMovement()
@@ -91,21 +78,11 @@ public class PlayerUnit : Unit
         UIManager.Instance.EnableMovementCommands();
     }
 
-    private void HandleKeyboardInputs()
-    {
-        if (CanMove()) {
-            if (TryGetInput(KeyCode.W)) TryMove(x, y + 1);
-            if (TryGetInput(KeyCode.S)) TryMove(x, y - 1);
-            if (TryGetInput(KeyCode.A)) TryMove(x - 1, y);
-            if (TryGetInput(KeyCode.D)) TryMove(x + 1, y);
-        }
-    }
-
     private bool CanMove()
     {
         if (!TurnManager.Instance.IsPlayerTurn()) return false;
-        if (!activeBoomerang) return true;
-        return !activeBoomerang.isReturning;
+        if (!activeWeapon) return true;
+        return !activeWeapon.isReturning;
     }
 
     private bool TryGetInput(KeyCode keyCode)
@@ -138,28 +115,34 @@ public class PlayerUnit : Unit
         }
     }
 
-    private void OnTileSelected(Tile targetTile)
+    /*private void OnTileSelected(Tile targetTile)
     {
+        ThrowCommand command = new ThrowCommand(this, activeWeapon, targetTile);
+        actionsManager.InvokeCommand(command);
         if (CanThrowBoomerang(targetTile))
         {
             Tile currentTile = GridManager.Instance.GetTileAtPosition(x, y);
 
             if (currentTile == targetTile) return;
 
-            activeBoomerang.Initialize(this, targetTile);
-            activeBoomerang.ExecuteThrow();
+            activeWeapon.ExecuteThrow(targetTile, actionsManager);
             animator.SetTrigger("Throw");
             UIManager.Instance.DisableThrowCommandLabel();
             UIManager.Instance.EnableCatchCommandLabel();
         }
+    }*/
+
+    public bool IsThrowEnabled(Tile targetTile)
+    {
+        return CanThrowBoomerang(targetTile);
     }
 
     private bool CanThrowBoomerang(Tile targetTile)
     {
-        if (!activeBoomerang) return true;
-        if (activeBoomerang.isMoving || activeBoomerang.isReturning) return false;
+        if (!activeWeapon) return true;
+        if (activeWeapon.isMoving || activeWeapon.isReturning) return false;
         if (IsBoomerangInAir()) return false;
-        return CalculateDistance(targetTile) <= activeBoomerang.MaxDistance;
+        return CalculateDistance(targetTile) <= activeWeapon.MaxDistance;
     }
 
     private void OnTileUnhover(Tile targetTile)
@@ -177,7 +160,7 @@ public class PlayerUnit : Unit
         if (IsBoomerangInAir() || targetTile == null) return;
 
         Color hightlightColor;
-        if (CalculateDistance(targetTile) <= activeBoomerang.MaxDistance)
+        if (CalculateDistance(targetTile) <= activeWeapon.MaxDistance)
         {
             hightlightColor = targetTile.SetHighlight(true, true);
         } else
@@ -195,8 +178,35 @@ public class PlayerUnit : Unit
 
     private void OnDestroy()
     {
-        Tile.OnTileClicked -= OnTileSelected;
-        Tile.OnTileHovered -= OnTileHover;
+/*        Tile.OnTileClicked -= OnTileSelected;
+*/        Tile.OnTileHovered -= OnTileHover;
         Tile.OnTileUnHovered -= OnTileUnhover;
+    }
+
+    public void Throw(Tile targetTile, ICommandInvoker invoker)
+    {
+        Tile currentTile = GridManager.Instance.GetTileAtPosition(x, y);
+
+        if (currentTile == targetTile) return;
+
+        activeWeapon.ExecuteThrow(targetTile, invoker);
+        animator.SetTrigger("Throw");
+        UIManager.Instance.DisableThrowCommandLabel();
+        UIManager.Instance.EnableCatchCommandLabel();
+    }
+
+    public void CallWeapon(ICommandInvoker invoker)
+    {
+        activeWeapon.ExecuteReturn(rightHandTransform.position, invoker);
+    }
+
+    public void AssignWeapon(Boomerang weapon)
+    {
+        activeWeapon = weapon;
+        activeWeapon.transform.parent = rightHandTransform;
+        activeWeapon.Initialize(this);
+        boomerangHeld = true;
+        UIManager.Instance.EnableThrowCommandLabel();
+        UIManager.Instance.DisableCatchCommandLabel();
     }
 }

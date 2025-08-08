@@ -11,7 +11,6 @@ public abstract class Unit : MonoBehaviour
     protected Animator animator;
     public int currentHp { get; protected set; }
     public int stepsAvailable { get; protected set; }
-    public Tile currentTile { get; protected set; }
 
     protected virtual void Awake()
     {
@@ -24,14 +23,14 @@ public abstract class Unit : MonoBehaviour
     {
         x = startX;
         y = startY;
-        move(x, y);
     }
 
     protected virtual bool TryMove(int targetX, int targetY)
     {
-        if (GridManager.Instance.GetTileAtPosition(targetX, targetY) != null)
+        Tile targetTile = GridManager.Instance.GetTileAtPosition(targetX, targetY);
+        if (targetTile != null)
         {
-            MoveTo(targetX, targetY);
+            MoveTo(targetTile);
             return true;
         }
         return false;
@@ -42,11 +41,9 @@ public abstract class Unit : MonoBehaviour
         return TryMove(targetTile.x, targetTile.y);
     }
 
-    public virtual void MoveTo(int targetX, int targetY)
+    public virtual void MoveTo(Tile targetTile)
     {
-        x = targetX;
-        y = targetY;
-        move(x, y);
+        GridManager.Instance.AssignPlayerToTile(transform, targetTile);
     }
 
     public virtual void TakeDamage(int damage = 1)
@@ -63,8 +60,5 @@ public abstract class Unit : MonoBehaviour
     {
         Tile tile = GridManager.Instance.GetTileAtPosition(x, y);
         tile.unit = this;
-        Vector3 tilePosition = tile.transform.position;
-        transform.position = tilePosition;
-        currentTile = tile;
     }
 }
